@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Notion-lite • M1.1 Editor + Reorder</title>
+  <style>
+    :root{
+      --bg:#ffffff; --panel:#ffffff; --panel-2:#f6f7f9; --text:#1f2328; --muted:#6b7280; --accent:#0ea5e9; --border:#e7e9ee; --shadow:0 6px 20px rgba(0,0,0,.08); --radius:12px; --gap:14px; --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      --hover:#eef2f6; --hover2:#e7f5ff; --iconHover:#e9edf2; --blue:#3b82f6;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 var(--font)}
+    .app{--sidew:280px; display:grid; grid-template-columns: var(--sidew) 1fr; height:100vh; transition:grid-template-columns .24s ease}
+
+    /* SIDEBAR */
+    .sidebar{background:var(--panel-2); border-right:1px solid var(--border); padding:12px; display:flex; flex-direction:column; gap:10px; transition:transform .24s ease}
+    /* sticky header + scrollable middle + sticky footer */
+    .side-head{display:flex; flex-direction:column; gap:10px; position:sticky; top:0; background:var(--panel-2); z-index:1; padding-bottom:6px}
+    .side-scroll{flex:1; overflow:auto; padding-top:6px}
+    .side-foot{position:sticky; bottom:0; background:var(--panel-2)}
+    .brand{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:transparent;transition:background .2s}
+    .brand:hover{background:var(--hover)}
+    .brand .dot{width:24px; height:24px; border-radius:6px; background:#ddd; overflow:hidden}
+    .brand .name{font-weight:700; flex:1}
+    .hover-controls{display:flex; align-items:center; gap:6px; opacity:0; pointer-events:none; transition:opacity .15s}
+    .brand:hover .hover-controls{opacity:1; pointer-events:auto}
+
+    .icon-pill{display:inline-flex; align-items:center; justify-content:center; width:28px; height:24px; border-radius:6px; border:1px solid var(--border); background:#fff; cursor:pointer}
+    .icon-pill:hover{background:var(--iconHover)}
+
+    .search{display:flex;gap:8px;align-items:center;background:transparent;border:1px solid transparent;border-radius:10px;padding:8px 10px;transition:background .15s,border-color .15s}
+    .search:hover{background:var(--hover)}
+    .search:focus-within{background:var(--hover);border-color:var(--border)}
+    .search input{flex:1;border:0;outline:0;background:transparent}
+
+    .side-item{display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:10px; cursor:pointer}
+    .side-item:hover{background:var(--hover)}
+    .side-item.active{background:var(--hover2); border:1px solid #bde3fb}
+
+    /* Section headers */
+    .section-row{display:flex; align-items:center; gap:8px; padding:4px 6px; margin:6px 0 2px; border-radius:10px; color:#9aa1aa}
+    .section-row:hover{background:var(--hover)}
+    .section-title{font-size:12px; text-transform:uppercase; letter-spacing:.18em; flex:0 0 auto}
+    .chev{width:1em; text-align:right; opacity:0; pointer-events:none; transition:opacity .12s; margin-left:6px}
+    .section-row:hover .chev{opacity:.7; pointer-events:auto}
+    .section-controls{display:flex; align-items:center; gap:6px; opacity:0; pointer-events:none; transition:opacity .12s; margin-left:auto}
+    .section-row:hover .section-controls{opacity:1; pointer-events:auto}
+
+    .ws-pages, .fav-list, .shared-list, .private-list, .apps-list, .settings-list{display:flex; flex-direction:column; gap:2px}
+    
+    /* FIXED: Proper node structure with expand arrow */
+    .node{
+      display:flex; 
+      align-items:center; 
+      gap:6px; 
+      padding:4px 6px; 
+      border-radius:8px; 
+      cursor:pointer; 
+      position:relative;
+    }
+    .node:hover{background:var(--hover)}
+    .node.active{background:var(--hover2); border:1px solid #bde3fb}
+    
+    /* FIXED: Expand/collapse arrow */
+    .node-expand{
+      width:16px;
+      height:16px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:4px;
+      cursor:pointer;
+      opacity:0;
+      transition:opacity .15s, transform .15s;
+      flex-shrink:0;
+    }
+    .node:hover .node-expand,
+    .node-expand.visible{
+      opacity:1;
+    }
+    .node-expand:hover{
+      background:var(--iconHover);
+    }
+    .node-expand.expanded{
+      transform:rotate(90deg);
+    }
+    
+    /* FIXED: Proper nesting indentation */
+    .children{
+      margin-left:20px;
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    .children.collapsed{
+      display:none;
+    }
+    
+    .drop-line{height:2px; background:var(--blue); border-radius:2px; position:absolute; left:6px; right:6px; pointer-events:none}
+
+    .button{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:10px; background:#fff; border:1px solid var(--border); cursor:pointer}
+
+    .content{padding:24px; overflow:auto}
+
+    /* Private › More overlay */
+    .dropdown{display:none; flex-direction:column; gap:4px; margin:4px 0 6px 8px; padding:6px; border:1px solid var(--border); background:#fff; border-radius:10px}
+    .dropdown .item{padding:6px 8px; border-radius:8px; cursor:pointer}
+    .dropdown .item:hover{background:var(--hover)}
+
+    .side-sep{height:1px; background:var(--border); margin:10px 0}
+    .help-row{display:flex; align-items:center; gap:8px; padding:8px 10px; color:#9aa1aa}
+
+    /* MAIN */
+    .main{display:grid; grid-template-rows:56px 1fr; min-width:0}
+    .topbar{display:flex; align-items:center; gap:8px; padding:10px 16px; border-bottom:1px solid var(--border); background:#fff; position:sticky; top:0; z-index:5}
+    .crumbs{display:flex; align-items:center; gap:6px; color:#6b7280}
+    .actions{margin-left:auto; display:flex; align-items:center; gap:8px}
+
+    .home-hero{font-size:28px; font-weight:800; text-align:center; margin:24px 0 18px}
+    .home-section-title{display:flex; align-items:center; gap:8px; color:#6b7280; font-weight:600; margin:12px 0}
+    .card-row{display:grid; grid-template-columns:repeat(5,1fr); gap:16px}
+    .page-card{background:#fff; border:1px solid var(--border); border-radius:18px; box-shadow:var(--shadow); padding:0; overflow:hidden}
+    .page-card .thumb{height:64px; background:#f0f2f5; border-bottom:1px solid var(--border)}
+    .page-card .body{padding:10px 12px}
+    .page-card .title{font-weight:600}
+    .page-card .meta{font-size:12px; color:#9aa1aa; margin-top:4px}
+    .upcoming{background:#fff; border:1px solid var(--border); border-radius:18px; box-shadow:var(--shadow); padding:18px}
+    .upcoming .grid{display:grid; grid-template-columns:1.2fr 1fr; gap:16px}
+    .upcoming .panel{background:#fafafa; border:1px dashed var(--border); border-radius:12px; padding:12px; color:#9aa1aa}
+
+    /* collapsed */
+    .collapsed .app{--sidew:0px}
+    .collapsed .sidebar{transform:translateX(-100%)}
+    .collapsed .sidebar{
+      opacity:0;
+      pointer-events:none;
+      visibility:hidden;
+    }
+    .hamburger{position:fixed; top:10px; left:10px; z-index:10; display:none}
+    .collapsed .hamburger{display:inline-flex}
+
+    @media(max-width:1200px){.card-row{grid-template-columns:repeat(3,1fr)} .upcoming .grid{grid-template-columns:1fr}}
+    @media(max-width:900px){.app{--sidew:72px} .brand .name, .label-text, .fav .txt, .side-item .txt {display:none}}
+
+    /* FIXED: node hover controls only on rightmost side */
+    .node-label{ 
+      flex:1; 
+      overflow:hidden; 
+      text-overflow:ellipsis; 
+      white-space:nowrap;
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+    .node-controls{ 
+      display:flex; 
+      align-items:center; 
+      gap:4px; 
+      opacity:0; 
+      pointer-events:none; 
+      transition:opacity .15s;
+      flex-shrink:0;
+    }
+    /* FIXED: Only show controls on direct hover, not when hovering children */
+    .node:hover > .node-controls{ 
+      opacity:1; 
+      pointer-events:auto; 
+    }
+    .pill{ 
+      display:inline-flex; 
+      align-items:center; 
+      justify-content:center; 
+      width:24px; 
+      height:22px; 
+      border-radius:6px; 
+      border:1px solid var(--border); 
+      background:#fff; 
+      cursor:pointer;
+      font-size:12px;
+    }
+    .pill:hover{ background:var(--iconHover) }
+    .chev-mini{ font-size:12px; opacity:.7 }
+    .pill[data-tip]{ position:relative }
+    .pill[data-tip]:hover::after{
+      content:attr(data-tip); position:absolute; top:110%; left:50%; transform:translateX(-50%);
+      background:#111827; color:#fff; padding:6px 8px; border-radius:6px; font-size:12px; white-space:nowrap; box-shadow:0 6px 20px rgba(0,0,0,.2);
+      z-index:1000;
+    }
+    .ctx{ position:fixed; z-index:9999; min-width:240px; max-width:320px; background:#111; color:#fff; border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:8px; box-shadow:0 20px 60px rgba(0,0,0,.35); }
+    .ctx .grp{ padding:6px 8px; border-bottom:1px solid rgba(255,255,255,.08); margin-bottom:6px; }
+    .ctx .item{ padding:8px 10px; border-radius:8px; cursor:pointer; display:flex; align-items:center; gap:8px; }
+    .ctx .item:hover{ background:rgba(255,255,255,.08); }
+    .ctx .muted{ color:#9aa1aa; font-size:12px; margin-top:6px; }
+
+    /* icon tray */
+    .icon-tray{position:fixed; z-index:10000; left:50%; top:18%; transform:translateX(-50%); width:520px; max-width:95vw; background:#1f1f1f; color:#fff; border-radius:14px; box-shadow:0 20px 60px rgba(0,0,0,.45); padding:14px}
+    .icon-tray .tabs{display:flex; gap:8px; margin-bottom:8px}
+    .icon-tray .tab{padding:6px 10px; border-radius:8px; background:#2a2a2a; cursor:pointer}
+    .icon-tray .tab.active{background:#3a3a3a}
+    .icon-grid{display:grid; grid-template-columns:repeat(10,1fr); gap:6px; max-height:260px; overflow:auto}
+    .icon-grid div{font-size:22px; text-align:center; padding:6px; border-radius:8px; cursor:pointer}
+    .icon-grid div:hover{background:#333}
+    .icon-tray .footer{display:flex; justify-content:flex-end; gap:8px; margin-top:8px}
+    .hidden{display:none}
+    .cover{height:180px; border:1px solid var(--border); border-radius:10px; margin:10px 0; background-size:cover; background-position:center; position:relative}
+    .icon-over{position:absolute; left:16px; bottom:-22px; width:44px; height:44px; border-radius:12px; background:#fff; display:flex; align-items:center; justify-content:center; font-size:22px; box-shadow:var(--shadow); border:1px solid var(--border)}
+    .editor-placeholder{color:#9aa1aa}
+
+    /* Notion-like quick-actions (hover only) */
+    .quick-actions{
+      display:flex; align-items:center; gap:22px;
+      margin:4px 0 8px 0; color:#9aa1aa; font-weight:600;
+      opacity:0; pointer-events:none; transition:opacity .15s;
+    }
+    .content:hover .quick-actions{ opacity:1; pointer-events:auto; }
+    .quick-actions .qa{ display:inline-flex; align-items:center; gap:8px; cursor:pointer; }
+    .quick-actions .qa .ico{ font-size:18px; line-height:1; opacity:.95; }
+    .quick-actions .qa:hover{ color:#6b7280; }
+
+    /* Private overlay next to sidebar */
+    .priv-panel{position:fixed; top:0; left:var(--sidew); height:100vh; width:420px; max-width:95vw; background:#111; color:#fff; border-right:1px solid rgba(255,255,255,.08); z-index:9998; padding:12px 12px 8px 12px; overflow:auto; box-shadow:0 20px 60px rgba(0,0,0,.35)}
+    
+    .pill-btn{display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:8px; background:#1b1b1b; border:1px solid #222; cursor:pointer; margin-right:6px; margin-bottom:6px}
+
+    /* --- Nesting + drop guide --- */
+    .node.drop-before { box-shadow: inset 0 -2px 0 #1d9bf0; }
+
+    /* --- Private overlay docked --- */
+    .priv-dock {
+      position:fixed; top:0; bottom:0; left:var(--sidew);
+      width:420px; background:#111; color:#fff; z-index:9998;
+      border-right:1px solid rgba(255,255,255,.08);
+      display:flex; flex-direction:column; padding:12px 12px 8px 12px;
+      box-shadow: 12px 0 40px rgba(0,0,0,.28);
+    }
+    .priv-backdrop{position:fixed; inset:0; background:rgba(0,0,0,.25); z-index:9997}
+
+    /* --- Cover + icon + comment placement (Notion-like) --- */
+    .cover-wrap{ position:relative; margin:10px 0; }
+    .cover-wrap .cover{ height:180px; border-radius:10px; }
+    .page-emoji{
+      position:absolute; left:18px; bottom:-22px;
+      font-size:44px; line-height:1;
+      background:transparent; box-shadow:none; border:none;
+      width:auto; height:auto; border-radius:0; padding:0;
+    }
+    .comment-chip{
+      position:absolute; left:18px; top:10px; background:#fff; color:#6b7280;
+      border:1px solid var(--border); border-radius:8px; padding:6px 10px;
+      display:flex; align-items:center; gap:8px; font-weight:600;
+      box-shadow:var(--shadow); cursor:pointer;
+    }
+    .comment-chip:hover{ background:#f9fafb }
+
+    /* If no cover, show icon inline with title like before */
+    .title-row{ display:flex; align-items:center; gap:10px; }
+    .title-emoji{ font-size:28px; line-height:1 }
+
+    /* --- Task List board (minimal) --- */
+    .board{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:14px }
+    .col{ background:#fff; border:1px solid var(--border); border-radius:12px; overflow:hidden }
+    .col .head{ font-weight:700; padding:8px 10px }
+    .col.red .head{ color:#c2410c; background:#fef2f2 }
+    .col.amber .head{ color:#92400e; background:#fff7ed }
+    .col.green .head{ color:#166534; background:#ecfdf5 }
+    .col .body{ padding:8px 10px; color:#9aa1aa }
+    .col .new{ margin:8px 10px; border:1px dashed var(--border); border-radius:10px; padding:8px; cursor:pointer; text-align:center }
+    .col .new:hover{ background:#fafafa }
+
+  </style>
+</head>
+<body>
+  <button id="btnOpenSidebar" class="button hamburger">☰</button>
+  <div class="app">
+    <aside class="sidebar">
+      <!-- sticky header -->
+      <div class="side-head">
+        <div class="brand" id="brandArea">
+          <div class="dot"></div>
+          <div class="name">Soumikii'…</div>
+          <div class="hover-controls">
+            <button class="icon-pill" id="btnCollapse" title="Close sidebar">«</button>
+            <button class="icon-pill" id="btnNewNote" title="New note">📝</button>
+            <button class="icon-pill" id="btnChevron" title="Account">⌄</button>
+          </div>
+        </div>
+
+        <label class="search">
+          <span style="opacity:.5">🔍</span>
+          <input id="sidebarSearch" placeholder="Search" />
+        </label>
+
+        <div class="side-item active" data-static="home">🏠 <span class="txt">Home</span></div>
+        <div class="side-item" data-static="meetings">🗓️ <span class="txt">Meetings</span></div>
+        <div class="side-item" data-static="ai">✨ <span class="txt">Notion AI</span></div>
+        <div class="side-item" data-static="inbox">📥 <span class="txt">Inbox</span></div>
+      </div>
+
+      <!-- scrollable middle -->
+      <div class="side-scroll">
+        <!-- Favorites -->
+        <div class="section-row" id="secFavorites">
+          <div class="section-title">Favorites</div>
+          <span class="chev">⌄</span>
+          <div class="section-controls">
+            <button class="icon-pill" title="More">⋯</button>
+            <button class="icon-pill" id="favAdd" title="Add a page">＋</button>
+          </div>
+        </div>
+        <div id="favorites" class="fav-list"></div>
+
+        <!-- Workspace -->
+        <div class="section-row" id="secWorkspace">
+          <div class="section-title">Workspace</div>
+          <span class="chev">⌄</span>
+          <div class="section-controls">
+            <button class="icon-pill" id="wsMore" title="More">⋯</button>
+            <button class="icon-pill" id="wsAdd" title="Add a page">＋</button>
+          </div>
+        </div>
+        <div id="tree" class="ws-pages"></div>
+
+        <!-- Shared -->
+        <div class="section-row" id="secShared">
+          <div class="section-title">Shared</div>
+          <span class="chev">⌄</span>
+          <div class="section-controls">
+            <button class="icon-pill" title="More">⋯</button>
+            <button class="icon-pill" id="sharedAdd" title="Add a page">＋</button>
+          </div>
+        </div>
+        <div id="sharedList" class="shared-list"></div>
+
+        <!-- Private -->
+        <div class="section-row" id="secPrivate">
+          <div class="section-title">Private</div>
+          <span class="chev">⌄</span>
+          <div class="section-controls">
+            <button class="icon-pill" title="More" id="privateMoreBtn">⋯</button>
+            <button class="icon-pill" id="privateAdd" title="Add a page">＋</button>
+          </div>
+        </div>
+        <div id="privateList" class="private-list"></div>
+        <div id="privateMoreMenu" class="dropdown">
+          <div class="item" data-template="Getting Started">Getting started</div>
+          <div class="item" data-template="Quick Note">Quick note</div>
+          <div class="item" data-template="Task List">Task list</div>
+          <div class="item" data-template="Journal">Journal</div>
+          <div class="item" data-template="Reading List">Reading list</div>
+          <div class="item" data-template="Personal Home">Personal home</div>
+        </div>
+
+        <!-- Notion apps -->
+        <div class="section-row" id="secApps">
+          <div class="section-title">Notion apps</div>
+          <span class="chev"></span>
+          <div class="section-controls"></div>
+        </div>
+        <div class="apps-list" id="appsList">
+          <div class="node">✉️ Notion Mail</div>
+          <div class="node">📅 Notion Calendar</div>
+          <div class="node">🅽 Notion Desktop</div>
+        </div>
+
+        <!-- Settings / Marketplace / Trash -->
+        <div class="settings-list" id="settingsList">
+          <div class="node">⚙️ Settings</div>
+          <div class="node">🛍️ Marketplace</div>
+          <div class="node">🗑️ Trash</div>
+        </div>
+      </div>
+
+      <!-- sticky footer -->
+      <div class="side-sep"></div>
+      <div class="help-row side-foot">❓ Help</div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="crumbs" id="crumbs"></div>
+        <div class="actions">
+          <button class="button" id="btnShare" title="Share">Share</button>
+          <button class="button" id="btnFavTop" title="Favorite">☆</button>
+          <button class="button" id="btnMoreTop" title="More">⋯</button>
+        </div>
+      </div>
+      <section class="content" id="content"></section>
+    </main>
+  </div>
+
+  <!-- hidden inputs for cover/icon uploads -->
+  <input id="fileCover" type="file" accept="image/*" class="hidden" />
+  <input id="fileIcon" type="file" accept="image/*" class="hidden" />
+
+  <script>
+    const LS_KEY='notionlite_v1_light';
+    const HOME_ID='HOME';
+    const uid=(p='id')=>p+'_'+Math.random().toString(36).slice(2,9);
+
+    function load(){
+      const raw=localStorage.getItem(LS_KEY);
+      if(raw){try{return JSON.parse(raw)}catch(e){localStorage.removeItem(LS_KEY)}}
+      const wsId=uid('ws'); const pg=uid('pg');
+      const state={
+        currentWorkspaceId:wsId,
+        currentPageId:HOME_ID,
+        viewScope:'workspace',
+        viewId:HOME_ID,
+        visited:[],
+        expandedNodes:{},  // Track which nodes are expanded
+        privatePages:[{id:uid('priv'), title:'Private note', children:[], body:'', icon:'', cover:'', favorite:false}],
+        sharedPages:[],
+        workspaces:{[wsId]:{
+          id:wsId,name:'Workspace 1',
+          pages:{[pg]:{id:pg,title:'Task List',parentId:null,children:[],favorite:false,blocks:[],icon:'',cover:'',body:''}},
+          rootOrder:[pg]
+        }}
+      };
+      save(state); return state;
+    }
+    function save(s){localStorage.setItem(LS_KEY, JSON.stringify(s))}
+    let state=load();
+    const ws=()=>state.workspaces[state.currentWorkspaceId];
+    const getPage=id=>ws().pages[id];
+
+    // MIGRATION
+    if(!ws().rootOrder){ ws().rootOrder=Object.keys(ws().pages).filter(id=>ws().pages[id].parentId===null); save(state); }
+    if(!state.expandedNodes) state.expandedNodes = {};
+    (state.privatePages||[]).forEach(p=>{ if(!Array.isArray(p.children)) p.children=[]; if(p.favorite==null) p.favorite=false; if(p.icon==null) p.icon=''; if(p.cover==null) p.cover=''; if(p.body==null) p.body=''; });
+    (state.sharedPages||[]).forEach(p=>{ if(!Array.isArray(p.children)) p.children=[]; if(p.favorite==null) p.favorite=false; if(p.icon==null) p.icon=''; if(p.cover==null) p.cover=''; if(p.body==null) p.body=''; });
+
+    // Refs
+    const treeEl=document.getElementById('tree');
+    const favEl=document.getElementById('favorites');
+    const content=document.getElementById('content');
+    const privateList=document.getElementById('privateList');
+    const sharedList=document.getElementById('sharedList');
+    const privateMenu=document.getElementById('privateMoreMenu');
+    const privateMoreBtn=document.getElementById('privateMoreBtn');
+    const fileCover=document.getElementById('fileCover');
+    const fileIcon=document.getElementById('fileIcon');
+
+    // ---------- Context menu ----------
+    let ctxEl = null;
+    function closeCtx(){ if(ctxEl){ ctxEl.remove(); ctxEl=null; } }
+    document.addEventListener('click', (e)=>{ if(ctxEl && !ctxEl.contains(e.target)) closeCtx(); });
+
+    function openCtx(x, y, actions) {
+      closeCtx();
+      ctxEl = document.createElement('div');
+      ctxEl.className = 'ctx';
+      ctxEl.style.left = x + 'px';
+      ctxEl.style.top  = y + 'px';
+      const grp = document.createElement('div'); grp.className='grp'; grp.textContent='Page'; ctxEl.appendChild(grp);
+      actions.forEach(a=>{
+        const it = document.createElement('div'); it.className='item'; it.innerHTML = a.icon + ' ' + a.label;
+        it.onclick = (e)=>{ e.stopPropagation(); closeCtx(); a.onClick?.(); };
+        ctxEl.appendChild(it);
+      });
+      const meta = document.createElement('div'); meta.className='muted';
+      meta.textContent = 'Last edited by Soumikiii · just now';
+      ctxEl.appendChild(meta);
+      document.body.appendChild(ctxEl);
+    }
+
+    // ---------- Favorites (across all scopes) ----------
+    function renderFavorites(){
+      favEl.innerHTML='';
+      const addFav = (p, openFn) => {
+        const el=document.createElement('div');
+        el.className='node';
+        el.innerHTML=(p.icon? p.icon+' ':'📄 ')+(p.title||'Untitled');
+        el.onclick=openFn;
+        favEl.appendChild(el);
+      };
+      Object.values(ws().pages).filter(p=>p.favorite).forEach(p=>addFav(p, ()=>openEditor('workspace', p.id)));
+      state.privatePages.filter(p=>p.favorite).forEach(p=>addFav(p, ()=>openEditor('private', p.id)));
+      state.sharedPages.filter(p=>p.favorite).forEach(p=>addFav(p, ()=>openEditor('shared', p.id)));
+    }
+
+    // ---------- Tree (Workspace) with proper nesting ----------
+    function renderTree(){
+      treeEl.innerHTML='';
+      const roots = ws().rootOrder.filter(id => ws().pages[id] && ws().pages[id].parentId===null);
+      roots.forEach(rid=>treeEl.appendChild(renderNode(ws().pages[rid],'workspace',null)));
+    }
+
+    function findInArray(arr,id){
+      const dfs = (list, target) => {
+        for (const p of list){
+          if (p.id === target) return p;
+          if (Array.isArray(p.children)){
+            const hit = dfs(p.children, target);
+            if (hit) return hit;
+          }
+        }
+        return null;
+      };
+      return dfs(arr, id);
+    }
+
+    // FIXED: Proper nesting with expand/collapse arrows (workspace + private + shared)
+    function renderNode(page, scope='workspace', parentRef=null){
+      if(!Array.isArray(page.children)) page.children=[];
+      
+      const el=document.createElement('div');
+      const wrapper = document.createElement('div');
+      
+      el.className='node';
+      el.draggable=true;
+      el.dataset.id=page.id;
+      el.dataset.scope=scope;
+      if(state.viewScope===scope && state.viewId===page.id) el.classList.add('active');
+
+      const hasChildren = page.children?.length > 0;
+      const isExpanded = state.expandedNodes[page.id];
+
+      // Expand/collapse arrow (only if has children)
+      const expandBtn = document.createElement('span');
+      expandBtn.className = 'node-expand';
+      if(hasChildren) {
+        expandBtn.classList.add('visible');
+        if(isExpanded) expandBtn.classList.add('expanded');
+      }
+      expandBtn.innerHTML = '▸';
+      expandBtn.onclick = (e) => {
+        e.stopPropagation();
+        if(hasChildren) {
+          state.expandedNodes[page.id] = !state.expandedNodes[page.id];
+          save(state);
+          // Re-render the appropriate scope
+          if(scope === 'workspace') renderTree();
+          else if(scope === 'private') renderPrivate();
+          else if(scope === 'shared') renderShared();
+        }
+      };
+
+      // Label
+      const label = document.createElement('span');
+      label.className = 'node-label';
+      label.innerHTML = `${(page.icon? page.icon+' ': '📄 ')}${page.title||'Untitled'}`;
+
+      // Controls (only show on direct hover)
+      const controls = document.createElement('div');
+      controls.className = 'node-controls';
+      controls.innerHTML = `
+        <button class="pill" data-tip="Add a page inside" data-act="add">＋</button>
+        <button class="pill" data-act="more">⋯</button>
+      `;
+
+      el.appendChild(expandBtn);
+      el.appendChild(label);
+      el.appendChild(controls);
+
+      // Open editor
+      el.addEventListener('click',(e)=>{
+        if(e.target.closest('.pill') || e.target.closest('.node-expand')) return;
+        openEditor(scope, page.id);
+      });
+
+      // Drag & drop (simplified - reorder only)
+      el.addEventListener('dragstart', e=>{
+        e.dataTransfer.setData('text/plain', JSON.stringify({id:page.id, scope, parentId:(scope==='workspace'?page.parentId:null)}));
+      });
+      el.addEventListener('dragover', e=>{ e.preventDefault(); el.classList.add('drop-before'); });
+      el.addEventListener('dragleave', ()=>{ el.classList.remove('drop-before'); });
+      el.addEventListener('drop', e=>{
+        e.preventDefault(); el.classList.remove('drop-before');
+        const data = JSON.parse(e.dataTransfer.getData('text/plain')||'{}');
+        if(!data.id || data.scope!==scope || data.id === page.id) return;
+
+        if(scope==='workspace'){
+          const from = ws().pages[data.id];
+          const to = ws().pages[page.id];
+          if(from.parentId !== to.parentId) return; // Same parent only
+
+          const list = from.parentId===null ? ws().rootOrder : ws().pages[from.parentId].children;
+          const fi=list.indexOf(data.id), ti=list.indexOf(page.id);
+          if(fi<0 || ti<0) return;
+          list.splice(fi,1); list.splice(ti,0,data.id);
+          save(state); renderTree();
+        } else if(scope==='private'){
+          // For private pages, we need to find them in the tree structure
+          const findAndReorder = (arr, fromId, toId, parentArr = null) => {
+            // Check if both items are in this array level
+            const fi = arr.findIndex(p => p.id === fromId);
+            const ti = arr.findIndex(p => p.id === toId);
+            
+            if(fi >= 0 && ti >= 0){
+              // Both found at this level - reorder
+              const [item] = arr.splice(fi, 1);
+              arr.splice(ti, 0, item);
+              return true;
+            }
+            
+            // Otherwise search in children
+            for(let p of arr){
+              if(p.children?.length && findAndReorder(p.children, fromId, toId, p)){
+                return true;
+              }
+            }
+            return false;
+          };
+          
+          findAndReorder(state.privatePages, data.id, page.id);
+          save(state); renderPrivate();
+        } else if(scope==='shared'){
+          const findAndReorder = (arr, fromId, toId) => {
+            const fi = arr.findIndex(p => p.id === fromId);
+            const ti = arr.findIndex(p => p.id === toId);
+            
+            if(fi >= 0 && ti >= 0){
+              const [item] = arr.splice(fi, 1);
+              arr.splice(ti, 0, item);
+              return true;
+            }
+            
+            for(let p of arr){
+              if(p.children?.length && findAndReorder(p.children, fromId, toId)){
+                return true;
+              }
+            }
+            return false;
+          };
+          
+          findAndReorder(state.sharedPages, data.id, page.id);
+          save(state); renderShared();
+        }
+      });
+
+      // + Add child
+      controls.querySelector('[data-act="add"]').onclick=(e)=>{
+        e.stopPropagation();
+        if(scope==='workspace'){
+          const id=uid('pg');
+          ws().pages[id]={id,title:'Untitled',parentId:page.id,children:[],favorite:false,blocks:[],icon:'',cover:'',body:''};
+          page.children.push(id);
+          state.expandedNodes[page.id] = true; // Auto-expand when adding child
+          save(state); renderTree(); openEditor('workspace', id);
+        } else if(scope==='private'){
+          const newPage={id:uid('priv'), title:'Untitled', children:[], icon:'', cover:'', body:'', favorite:false};
+          page.children.push(newPage);
+          state.expandedNodes[page.id] = true; // Auto-expand when adding child
+          save(state); renderPrivate(); openEditor('private', newPage.id);
+        } else if(scope==='shared'){
+          const newPage={id:uid('shr'), title:'Untitled', children:[], icon:'', cover:'', body:'', favorite:false};
+          page.children.push(newPage);
+          state.expandedNodes[page.id] = true; // Auto-expand when adding child
+          save(state); renderShared(); openEditor('shared', newPage.id);
+        }
+      };
+
+      // … More menu
+      controls.querySelector('[data-act="more"]').onclick=(e)=>{
+        e.stopPropagation();
+        const r=e.currentTarget.getBoundingClientRect();
+        const isFav = !!page.favorite;
+        const actions=[
+          {icon:'☆',label: (isFav?'Remove from Favorites':'Add to Favorites'), onClick:()=>{
+            page.favorite=!isFav; save(state); renderFavorites();
+            // Re-render the appropriate scope
+            if(scope === 'workspace') renderTree();
+            else if(scope === 'private') renderPrivate();
+            else if(scope === 'shared') renderShared();
+          }},
+          {icon:'🔗',label:'Copy link', onClick:()=>{ navigator.clipboard?.writeText('#'+(page.title||page.id)); }},
+          {icon:'📄',label:'Duplicate', onClick:()=>{
+            if(scope==='workspace'){
+              const id=uid('pg');
+              ws().pages[id]={...page,id,title:(page.title||'Untitled')+' (copy)',children:[]};
+              if(page.parentId==null){ ws().rootOrder.push(id); }
+              else { ws().pages[page.parentId].children.push(id); }
+              save(state); renderTree();
+            } else if(scope==='private'){
+              const newPage={...page,id:uid('priv'),title:(page.title||'Untitled')+' (copy)',children:[]};
+              state.privatePages.push(newPage);
+              save(state); renderPrivate();
+            } else if(scope==='shared'){
+              const newPage={...page,id:uid('shr'),title:(page.title||'Untitled')+' (copy)',children:[]};
+              state.sharedPages.push(newPage);
+              save(state); renderShared();
+            }
+          }},
+          {icon:'✏️',label:'Rename', onClick:()=>{
+            const nv=prompt('Rename page',page.title||'Untitled'); if(!nv) return;
+            page.title=nv; save(state);
+            if(scope==='workspace'){ renderTree(); renderCrumbs(); }
+            else if(scope==='private'){ renderPrivate(); renderCrumbs(); }
+            else if(scope==='shared'){ renderShared(); renderCrumbs(); }
+          }},
+          {icon:'🗑️',label:'Move to Trash', onClick:()=>{
+            if(scope==='workspace'){
+              if(page.parentId==null){
+                const idx=ws().rootOrder.indexOf(page.id); if(idx>-1) ws().rootOrder.splice(idx,1);
+              }else{
+                const l=ws().pages[page.parentId].children; const i=l.indexOf(page.id); if(i>-1) l.splice(i,1);
+              }
+              delete ws().pages[page.id];
+              if(state.viewScope==='workspace' && state.viewId===page.id) { state.viewId=HOME_ID; state.viewScope='home'; }
+              save(state); renderTree(); renderFavorites(); renderCrumbs(); render();
+            } else if(scope==='private'){
+              // Helper function to recursively remove page and its children
+              const removePage = (pageToRemove, parentArray) => {
+                const idx = parentArray.findIndex(p => p.id === pageToRemove.id);
+                if(idx > -1) parentArray.splice(idx, 1);
+              };
+              const findAndRemove = (arr, targetId, parent = null) => {
+                for(let i = 0; i < arr.length; i++){
+                  if(arr[i].id === targetId){
+                    arr.splice(i, 1);
+                    return true;
+                  }
+                  if(arr[i].children?.length && findAndRemove(arr[i].children, targetId, arr[i])){
+                    return true;
+                  }
+                }
+                return false;
+              };
+              findAndRemove(state.privatePages, page.id);
+              if(state.viewScope==='private' && state.viewId===page.id){ state.viewId=HOME_ID; state.viewScope='home'; }
+              save(state); renderPrivate(); renderFavorites(); render();
+            } else if(scope==='shared'){
+              const findAndRemove = (arr, targetId) => {
+                for(let i = 0; i < arr.length; i++){
+                  if(arr[i].id === targetId){
+                    arr.splice(i, 1);
+                    return true;
+                  }
+                  if(arr[i].children?.length && findAndRemove(arr[i].children, targetId)){
+                    return true;
+                  }
+                }
+                return false;
+              };
+              findAndRemove(state.sharedPages, page.id);
+              if(state.viewScope==='shared' && state.viewId===page.id){ state.viewId=HOME_ID; state.viewScope='home'; }
+              save(state); renderShared(); renderFavorites(); render();
+            }
+          }},
+          {icon:'🡥',label:'Open in new tab', onClick:()=>window.open('#','_blank')}
+        ];
+        openCtx(r.left, r.bottom+6, actions);
+      };
+
+      wrapper.appendChild(el);
+
+      // Render children if expanded (for all scopes)
+      if(hasChildren && isExpanded){
+        const childContainer = document.createElement('div');
+        childContainer.className = 'children';
+        
+        if(scope === 'workspace'){
+          // Workspace: children are IDs, need to look them up
+          page.children.forEach(cid => {
+            const child = getPage(cid);
+            if(child) childContainer.appendChild(renderNode(child, 'workspace', page.id));
+          });
+        } else {
+          // Private/Shared: children are objects themselves
+          page.children.forEach(childObj => {
+            childContainer.appendChild(renderNode(childObj, scope, page.id));
+          });
+        }
+        
+        wrapper.appendChild(childContainer);
+      }
+
+      return wrapper;
+    }
+
+    // Private & Shared lists
+    function renderPrivate(){
+      privateList.innerHTML='';
+      state.privatePages.forEach(p=>privateList.appendChild(renderNode(p,'private',null)));
+      const more = document.createElement('div');
+      more.className = 'node';
+      more.innerHTML = '⋯ More';
+      more.title = 'All private pages';
+      more.onclick = () => openPrivateOverlay();
+      privateList.appendChild(more);
+    }
+    function renderShared(){
+      sharedList.innerHTML='';
+      state.sharedPages.forEach(p=>sharedList.appendChild(renderNode(p,'shared',null)));
+    }
+
+    // --- Private overlay ---
+    function openPrivateOverlay(){
+      if(document.getElementById('privDock')) return;
+      const back = document.createElement('div'); back.className='priv-backdrop'; back.id='privBack';
+      const panel = document.createElement('div'); panel.className='priv-dock'; panel.id='privDock';
+      panel.innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <div style="font-weight:700">Private</div>
+          <div style="margin-left:auto;opacity:.8;cursor:pointer" id="closePriv">✕</div>
+        </div>
+        <input id="privSearch" placeholder="Search for a page..." style="width:100%;padding:10px;border-radius:8px;border:1px solid #333;background:#1b1b1b;color:#fff;margin-bottom:10px"/>
+        <div id="privList" style="overflow:auto;flex:1"></div>
+        <div style="border-top:1px solid #222;margin-top:8px;padding-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          ${['Getting Started','Quick Note','Task List','Journal','Reading List','Personal Home']
+            .map(n=>`<button class="button tmpl" data-name="${n}">${n}</button>`).join('')}
+        </div>
+      `;
+      document.body.appendChild(back); document.body.appendChild(panel);
+      const close=()=>{ back.remove(); panel.remove(); };
+      back.onclick=close; panel.querySelector('#closePriv').onclick=close;
+
+      const list=panel.querySelector('#privList');
+      const renderList=(q='')=>{
+        list.innerHTML='';
+        state.privatePages.filter(p=>p.title.toLowerCase().includes(q.toLowerCase())).forEach(p=>{
+          const row=document.createElement('div'); row.className='node'; row.style.background='transparent';
+          row.innerHTML=(p.icon? p.icon+' ':'📄 ')+p.title;
+          row.onclick=()=>{ close(); openEditor('private', p.id); };
+          list.appendChild(row);
+        });
+      };
+      renderList();
+      panel.querySelector('#privSearch').oninput=(e)=>renderList(e.target.value);
+      panel.querySelectorAll('.tmpl').forEach(b=>{
+        b.onclick=()=>{ const name=b.dataset.name; const p={id:uid('priv'), title:name, children:[], icon:'', cover:'', body:'', favorite:false};
+          state.privatePages.push(p); save(state); renderPrivate(); close(); openEditor('private',p.id); };
+      });
+    }
+
+    // Navigation
+    function openEditor(scope,id){
+      state.viewScope=scope;
+      state.viewId=id;
+      if(scope==='workspace'){
+        state.currentPageId=id;
+        state.visited=[id,...state.visited.filter(x=>x!==id)].slice(0,8);
+      }
+      save(state); render();
+    }
+    function setHome(){ state.viewScope='home'; state.viewId=HOME_ID; state.currentPageId=HOME_ID; save(state); render(); }
+    document.querySelectorAll('.side-item').forEach(it=>{
+      it.addEventListener('click',()=>{
+        document.querySelectorAll('.side-item').forEach(n=>n.classList.remove('active'));
+        it.classList.add('active');
+        setHome();
+      })
+    });
+
+    // Section controls
+    document.getElementById('wsAdd').onclick=()=>{
+      const id=uid('pg'); ws().pages[id]={id,title:'Untitled',parentId:null,children:[],favorite:false,blocks:[],icon:'',cover:'',body:''}; ws().rootOrder.push(id); save(state); renderTree(); openEditor('workspace',id);
+    };
+    document.getElementById('wsMore').onclick=()=>alert('Workspace options (stub)');
+
+    document.getElementById('sharedAdd').onclick=()=>{
+      const p={id:uid('shr'), title:'Shared page', children:[], icon:'', cover:'', body:'', favorite:false};
+      state.sharedPages.push(p); save(state); renderShared(); openEditor('shared', p.id);
+    };
+
+    document.getElementById('privateAdd').onclick=()=>{
+      const p={id:uid('priv'), title:'Private page', children:[], icon:'', cover:'', body:'', favorite:false};
+      state.privatePages.push(p); save(state); renderPrivate(); openEditor('private', p.id);
+    };
+
+    privateMoreBtn.onclick=(e)=>{ e.stopPropagation(); privateMenu.style.display = privateMenu.style.display==='flex' ? 'none':'flex'; };
+    document.addEventListener('click', (e)=>{ if(!privateMenu.contains(e.target) && e.target!==privateMoreBtn){ privateMenu.style.display='none'; }});
+    privateMenu.querySelectorAll('.item').forEach(it=>{
+      it.onclick=()=>{ const name=it.getAttribute('data-template'); const p={id:uid('priv'), title:name, children:[], icon:'', cover:'', body:'', favorite:false}; state.privatePages.push(p); save(state); renderPrivate(); privateMenu.style.display='none'; openEditor('private',p.id); };
+    });
+
+    // Breadcrumbs
+    const crumbsEl=document.getElementById('crumbs');
+    function renderCrumbs(){
+        crumbsEl.innerHTML='';
+        if(state.viewScope==='home'){ crumbsEl.textContent='Home'; return; }
+        const title = getTitle(state.viewScope,state.viewId) || 'Untitled';
+        const icon  = getIcon(state.viewScope,state.viewId);
+        const span = document.createElement('span');
+        span.textContent = (icon ? icon + ' ' : '') + title;
+        crumbsEl.appendChild(span);
+    }
+
+    function getTitle(scope,id){
+      if(scope==='workspace') return getPage(id)?.title;
+      if(scope==='private') return findInArray(state.privatePages,id)?.title;
+      if(scope==='shared') return findInArray(state.sharedPages,id)?.title;
+      return 'Home';
+    }
+    function getIcon(scope,id){
+      if(scope==='workspace') return getPage(id)?.icon || '';
+      if(scope==='private')   return findInArray(state.privatePages,id)?.icon || '';
+      if(scope==='shared')    return findInArray(state.sharedPages,id)?.icon || '';
+      return '';
+    }
+
+    function renderHome(){
+      content.innerHTML='';
+      const hero=document.createElement('div'); hero.className='home-hero'; hero.textContent='Good afternoon'; content.appendChild(hero);
+      const sec1=document.createElement('div'); sec1.className='home-section-title'; sec1.innerHTML='⏱️ Recently visited'; content.appendChild(sec1);
+      const row=document.createElement('div'); row.className='card-row'; content.appendChild(row);
+      (state.visited.length? state.visited: ws().rootOrder).slice(0,5).forEach(id=>{
+        const p=getPage(id)||{title:'New page'};
+        const card=document.createElement('div'); card.className='page-card';
+        card.innerHTML=`<div class="thumb"></div><div class="body"><div class="title">${p.title||'Untitled'}</div><div class="meta">1d ago</div></div>`;
+        card.onclick=()=>openEditor('workspace', id);
+        row.appendChild(card)
+      });
+      const sec2=document.createElement('div'); sec2.className='home-section-title'; sec2.innerHTML='📅 Upcoming events'; content.appendChild(sec2);
+      const up=document.createElement('div'); up.className='upcoming'; up.innerHTML=`<div class="grid"><div class="panel">Connect AI Meeting Notes with your Calendar events<br/><br/><a href="#" onclick="alert('Stub: connect calendar')">Connect Notion Calendar</a></div><div class="panel">Today · Team standup (9 AM · Office)<br/>Sat · Project check-in (10 AM · Office)</div></div>`;
+      content.appendChild(up);
+    }
+
+    // Icon tray
+    function openIconTray(onPick){
+      const tray=document.createElement('div');
+      tray.className='icon-tray';
+      tray.innerHTML=`
+        <div class="tabs">
+          <div class="tab active" data-t="emoji">Emoji</div>
+          <div class="tab" data-t="upload">Upload</div>
+          <div style="margin-left:auto;cursor:pointer" id="trayClose">✕</div>
+        </div>
+        <div id="emojiPane">
+          <div class="icon-grid" id="emojiGrid"></div>
+        </div>
+        <div id="uploadPane" class="hidden">
+          <input id="iconUpload" type="file" accept="image/*"/>
+          <div class="footer"><button id="useUpload" class="button">Use</button></div>
+        </div>
+      `;
+      const EMOJIS='😀 😃 😄 😁 😆 😅 😂 🙂 🙃 😉 😊 😇 🥰 😍 🤩 😘 😗 😙 😚 😋 😛 😝 😜 🤪 🤗 🤔 🤨 🫡 😐 😑 😶 🙄 😏 😣 😥 😮 🤐 😯 😪 😫 🥱 😴 😌 😛 🤓 🥳 🎉 📚 🧠 📝 🧪 💡 🔧 🛠️ 🧰 🗂️ 📦 📌 📎 📈 📊 🗒️ 📅 📁 🗃️ 🗳️'.split(/\s+/);
+      const grid=tray.querySelector('#emojiGrid');
+      EMOJIS.forEach(e=>{ const d=document.createElement('div'); d.textContent=e; d.onclick=()=>{ onPick(e); tray.remove(); }; grid.appendChild(d); });
+      const tabs=tray.querySelectorAll('.tab');
+      tabs.forEach(t=>t.onclick=()=>{
+        tabs.forEach(x=>x.classList.remove('active')); t.classList.add('active');
+        tray.querySelector('#emojiPane').classList.toggle('hidden', t.dataset.t!=='emoji');
+        tray.querySelector('#uploadPane').classList.toggle('hidden', t.dataset.t!=='upload');
+      });
+      tray.querySelector('#trayClose').onclick=()=>tray.remove();
+      tray.querySelector('#useUpload').onclick=()=>{
+        const f=tray.querySelector('#iconUpload').files?.[0]; if(!f) return;
+        const r=new FileReader(); r.onload=()=>{ onPick(`🖼️`); tray.remove(); }; r.readAsDataURL(f);
+      };
+      document.body.appendChild(tray);
+    }
+
+    // Page editor
+    function renderEditor(scope,id){
+      content.innerHTML='';
+      let page = scope==='workspace' ? getPage(id)
+              : scope==='private'   ? findInArray(state.privatePages,id)
+              : findInArray(state.sharedPages,id);
+      if(!page){ renderHome(); return; }
+
+      document.getElementById('btnFavTop').onclick=()=>{ 
+        page.favorite=!page.favorite; 
+        save(state); 
+        renderFavorites(); 
+        // Re-render the appropriate sidebar scope
+        if(scope === 'workspace') renderTree();
+        else if(scope === 'private') renderPrivate();
+        else if(scope === 'shared') renderShared();
+        renderEditor(scope,id); 
+      };
+      document.getElementById('btnFavTop').textContent = page.favorite ? '★' : '☆';
+      document.getElementById('btnShare').onclick=()=>alert('Share (stub)');
+
+      const bar = document.createElement('div');
+      bar.className = 'quick-actions';
+      bar.innerHTML = `
+        <div class="qa" id="qaIcon"><span class="ico">😊</span><span>Add icon</span></div>
+        <div class="qa" id="qaCover"><span class="ico">🖼️</span><span>Add cover</span></div>
+        <div class="qa" id="qaComment"><span class="ico">💬</span><span>Add comment</span></div>
+      `;
+      content.appendChild(bar);
+
+      const qaIcon = bar.querySelector('#qaIcon');
+      const qaCover = bar.querySelector('#qaCover');
+      const qaComment = bar.querySelector('#qaComment');
+
+      qaIcon.onclick = () => openIconTray(ico=>{
+        page.icon = ico; save(state);
+        renderTree(); renderPrivate(); renderShared(); renderFavorites(); renderEditor(scope,id);
+      });
+
+      qaCover.onclick = () => {
+        fileCover.value=''; fileCover.click();
+        fileCover.onchange = (e)=>{
+          const f = e.target.files?.[0]; if(!f) return;
+          const r=new FileReader();
+          r.onload = ()=>{ page.cover = r.result; save(state); renderEditor(scope,id); };
+          r.readAsDataURL(f);
+        };
+      };
+
+      qaComment.onclick = () => alert('Add comment (stub)');
+
+      if(page.icon){ qaIcon.style.display='none'; }
+      if(page.cover){ qaCover.style.display='none'; }
+
+      if(page.cover){
+        const wrap=document.createElement('div'); wrap.className='cover-wrap';
+        const cv=document.createElement('div'); cv.className='cover'; cv.style.backgroundImage=`url(${page.cover})`;
+        const chip=document.createElement('div'); chip.className='comment-chip'; chip.innerHTML='💬 Add comment';
+        chip.onclick=()=>alert('Add comment (stub)');
+        const emoji=document.createElement('div'); emoji.className='page-emoji'; emoji.textContent=page.icon||'😊';
+        emoji.onclick=()=>openIconTray(ico=>{ page.icon=ico; save(state); renderTree(); renderPrivate(); renderShared(); renderFavorites(); renderEditor(scope,id); });
+        wrap.appendChild(chip); wrap.appendChild(cv); wrap.appendChild(emoji);
+        content.appendChild(wrap);
+      }
+
+      const titleInput=document.createElement('input');
+      titleInput.className='input';
+      titleInput.style.cssText='font-size:32px;font-weight:800;border:none;outline:none;background:transparent;padding:0;margin:12px 0 6px 0;width:100%';
+      titleInput.value=page.title||'';
+      titleInput.oninput=()=>{ page.title=titleInput.value; save(state); renderTree(); renderPrivate(); renderShared(); renderFavorites(); renderCrumbs(); };
+
+      const titleRow=document.createElement('div'); titleRow.className='title-row';
+      const titleIcon=document.createElement('span'); titleIcon.className='title-emoji';
+      titleIcon.textContent = page.cover ? '' : (page.icon || '');
+      titleIcon.onclick=()=>openIconTray(ico=>{ page.icon=ico; save(state); renderTree(); renderPrivate(); renderShared(); renderFavorites(); renderEditor(scope,id); });
+      titleRow.appendChild(titleIcon);
+      titleRow.appendChild(titleInput);
+      content.appendChild(titleRow);
+
+      if(scope==='workspace' && page.children?.length){
+        const list=document.createElement('div'); list.style.cssText='margin:8px 0 6px 0';
+        page.children.forEach(cid=>{
+          const child=getPage(cid); if(!child) return;
+          const chip=document.createElement('span');
+          chip.style.cssText='display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);padding:8px 10px;border-radius:10px;margin-right:8px;margin-bottom:6px;background:#fff;cursor:pointer';
+          chip.innerHTML=(child.icon?child.icon+' ':'📄 ')+'<span style="text-decoration:underline">'+(child.title||"Untitled")+'</span>';
+          chip.onclick=()=>openEditor('workspace', child.id);
+          list.appendChild(chip);
+        });
+        content.appendChild(list);
+      } else if((scope==='private' || scope==='shared') && page.children?.length){
+        const list=document.createElement('div'); list.style.cssText='margin:8px 0 6px 0';
+        page.children.forEach(childObj=>{
+          const chip=document.createElement('span');
+          chip.style.cssText='display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);padding:8px 10px;border-radius:10px;margin-right:8px;margin-bottom:6px;background:#fff;cursor:pointer';
+          chip.innerHTML=(childObj.icon?childObj.icon+' ':'📄 ')+'<span style="text-decoration:underline">'+(childObj.title||"Untitled")+'</span>';
+          chip.onclick=()=>openEditor(scope, childObj.id);
+          list.appendChild(chip);
+        });
+        content.appendChild(list);
+      }
+
+      if((page.title||'').toLowerCase()==='task list'){
+        if(!page.board) page.board={todo:[],doing:[],done:[]};
+        const board=document.createElement('div'); board.className='board';
+        const makeCol=(key,label,cls)=>{
+          const col=document.createElement('div'); col.className='col '+cls;
+          col.innerHTML=`<div class="head">${label}</div><div class="body">${page.board[key].length}</div>`;
+          const body=document.createElement('div'); body.style.padding='6px 10px';
+          page.board[key].forEach((t,i)=>{ const c=document.createElement('div'); c.style.cssText='background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px;margin:6px 0'; c.textContent=t.title; body.appendChild(c); });
+          const add=document.createElement('div'); add.className='new'; add.textContent='＋ New page';
+          add.onclick=()=>{ page.board[key].push({title:'Untitled'}); save(state); renderEditor(scope,id); };
+          col.appendChild(body); col.appendChild(add); return col;
+        };
+        board.appendChild(makeCol('todo','To Do','red'));
+        board.appendChild(makeCol('doing','Doing','amber'));
+        board.appendChild(makeCol('done','Done 🥳','green'));
+        content.appendChild(board);
+      }
+
+      const ta=document.createElement('div');
+      ta.contentEditable = 'true';
+      ta.style.cssText='min-height:220px; outline:none; padding-top:8px';
+      ta.dataset.placeholder = "Write, press 'space' for AI, '/' for commands…";
+      ta.className='editor-placeholder';
+      ta.onfocus=()=>{ if(!page.body){ ta.textContent=''; ta.classList.remove('editor-placeholder'); } };
+      ta.onblur =()=>{ if(!ta.textContent.trim()){ ta.textContent=ta.dataset.placeholder; ta.classList.add('editor-placeholder'); } };
+      if(page.body){ ta.textContent=page.body; ta.classList.remove('editor-placeholder'); } else { ta.textContent=ta.dataset.placeholder; }
+      ta.oninput=()=>{ if(ta.classList.contains('editor-placeholder')) return; page.body=ta.textContent; save(state); };
+      content.appendChild(ta);
+    }
+
+    function render(){
+      renderFavorites();
+      renderTree();
+      renderPrivate();
+      renderShared();
+      renderCrumbs();
+      if(state.viewScope==='home') renderHome();
+      else renderEditor(state.viewScope,state.viewId);
+    }
+
+    document.getElementById('btnCollapse').onclick=()=>document.body.classList.add('collapsed');
+    document.getElementById('btnOpenSidebar').onclick=()=>document.body.classList.remove('collapsed');
+    document.getElementById('btnNewNote').onclick=()=>{ const id=uid('pg'); ws().pages[id]={id,title:'Untitled',parentId:null,children:[],favorite:false,blocks:[],icon:'',cover:'',body:''}; ws().rootOrder.push(id); save(state); renderTree(); openEditor('workspace', id); };
+    document.getElementById('btnChevron').onclick=()=>alert('Account menu (stub)');
+
+    render();
+  </script>
+</body>
+</html>
