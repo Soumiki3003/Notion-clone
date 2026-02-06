@@ -2284,17 +2284,18 @@
         const state={
             currentWorkspaceId:wsId,
             currentPageId:HOME_ID,
-            viewScope:'workspace',
+            viewScope:'home',
             viewId:HOME_ID,
             visited:[],
             expandedNodes:{},
             collapsedSections:{},
-            privatePages:[{id:uid('priv'), title:'Private note', children:[], body:'', icon:'', cover:'', favorite:false}],
+            privatePages:[],
             sharedPages:[],
             workspaces:{[wsId]:{
-            id:wsId,name:'Workspace 1',
-            pages:{[pg]:{id:pg,title:'Task List',parentId:null,children:[],favorite:false,blocks:[],icon:'',cover:'',body:''}},
-            rootOrder:[pg]
+                id:wsId,
+                name:'Workspace 1',
+                pages:{},
+                rootOrder:[]
             }}
         };
         save(state); return state;
