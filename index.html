@@ -2264,26 +2264,40 @@
     const uid=(p='id')=>p+'_'+Math.random().toString(36).slice(2,9);
 
     function load(){
-      const raw=localStorage.getItem(LS_KEY);
-      if(raw){try{return JSON.parse(raw)}catch(e){localStorage.removeItem(LS_KEY)}}
-      const wsId=uid('ws'); const pg=uid('pg');
-      const state={
-        currentWorkspaceId:wsId,
-        currentPageId:HOME_ID,
-        viewScope:'workspace',
-        viewId:HOME_ID,
-        visited:[],
-        expandedNodes:{},  // Track which nodes are expanded
-        collapsedSections:{}, // Track which sections are collapsed
-        privatePages:[{id:uid('priv'), title:'Private note', children:[], body:'', icon:'', cover:'', favorite:false}],
-        sharedPages:[],
-        workspaces:{[wsId]:{
-          id:wsId,name:'Workspace 1',
-          pages:{[pg]:{id:pg,title:'Task List',parentId:null,children:[],favorite:false,blocks:[],icon:'',cover:'',body:''}},
-          rootOrder:[pg]
-        }}
-      };
-      save(state); return state;
+        const raw=localStorage.getItem(LS_KEY);
+        if(raw){
+            try{
+            const parsed = JSON.parse(raw);
+            // Ensure all required properties exist
+            if(!parsed.privatePages) parsed.privatePages = [];
+            if(!parsed.sharedPages) parsed.sharedPages = [];
+            if(!parsed.expandedNodes) parsed.expandedNodes = {};
+            if(!parsed.collapsedSections) parsed.collapsedSections = {};
+            if(!parsed.visited) parsed.visited = [];
+            if(!parsed.workspaces) parsed.workspaces = {};
+            return parsed;
+            } catch(e){
+            localStorage.removeItem(LS_KEY);
+            }
+        }
+        const wsId=uid('ws'); const pg=uid('pg');
+        const state={
+            currentWorkspaceId:wsId,
+            currentPageId:HOME_ID,
+            viewScope:'workspace',
+            viewId:HOME_ID,
+            visited:[],
+            expandedNodes:{},
+            collapsedSections:{},
+            privatePages:[{id:uid('priv'), title:'Private note', children:[], body:'', icon:'', cover:'', favorite:false}],
+            sharedPages:[],
+            workspaces:{[wsId]:{
+            id:wsId,name:'Workspace 1',
+            pages:{[pg]:{id:pg,title:'Task List',parentId:null,children:[],favorite:false,blocks:[],icon:'',cover:'',body:''}},
+            rootOrder:[pg]
+            }}
+        };
+        save(state); return state;
     }
     function save(s){localStorage.setItem(LS_KEY, JSON.stringify(s))}
     let state=load();
@@ -2467,9 +2481,15 @@
         favEl.appendChild(wrapper);
       };
       
-      Object.values(ws().pages).filter(p=>p.favorite).forEach(p=>addFav(p, 'workspace', ()=>openEditor('workspace', p.id)));
-      state.privatePages.filter(p=>p.favorite).forEach(p=>addFav(p, 'private', ()=>openEditor('private', p.id)));
-      state.sharedPages.filter(p=>p.favorite).forEach(p=>addFav(p, 'shared', ()=>openEditor('shared', p.id)));
+      if(ws() && ws().pages){
+        Object.values(ws().pages).filter(p=>p.favorite).forEach(p=>addFav(p, 'workspace', ()=>openEditor('workspace', p.id)));
+      }
+      if(state.privatePages && Array.isArray(state.privatePages)){
+        state.privatePages.filter(p=>p.favorite).forEach(p=>addFav(p, 'private', ()=>openEditor('private', p.id)));
+      }
+      if(state.sharedPages && Array.isArray(state.sharedPages)){
+        state.sharedPages.filter(p=>p.favorite).forEach(p=>addFav(p, 'shared', ()=>openEditor('shared', p.id)));
+      }
     }
 
     // ---------- Tree (Workspace) with proper nesting ----------
@@ -2772,18 +2792,22 @@
 
     // Private & Shared lists
     function renderPrivate(){
-      privateList.innerHTML='';
-      state.privatePages.forEach(p=>privateList.appendChild(renderNode(p,'private',null)));
-      const more = document.createElement('div');
-      more.className = 'node';
-      more.innerHTML = '⋯ More';
-      more.title = 'All private pages';
-      more.onclick = () => openPrivateOverlay();
-      privateList.appendChild(more);
+        privateList.innerHTML='';
+        if(state.privatePages && Array.isArray(state.privatePages)){
+            state.privatePages.forEach(p=>privateList.appendChild(renderNode(p,'private',null)));
+        }
+        const more = document.createElement('div');
+        more.className = 'node';
+        more.innerHTML = '⋯ More';
+        more.title = 'All private pages';
+        more.onclick = () => openPrivateOverlay();
+        privateList.appendChild(more);
     }
     function renderShared(){
-      sharedList.innerHTML='';
-      state.sharedPages.forEach(p=>sharedList.appendChild(renderNode(p,'shared',null)));
+        sharedList.innerHTML='';
+        if(state.sharedPages && Array.isArray(state.sharedPages)){
+            state.sharedPages.forEach(p=>sharedList.appendChild(renderNode(p,'shared',null)));
+        }
     }
 
     // --- Private overlay ---
@@ -2965,7 +2989,9 @@
         };
         
         // Render all private pages
-        state.privatePages.forEach(page => renderPageItem(page, 0));
+        if(state.privatePages && Array.isArray(state.privatePages)){
+            state.privatePages.forEach(page => renderPageItem(page, 0));
+        }
         
         // Add templates at the end (only if no search query)
         if(!query) {
