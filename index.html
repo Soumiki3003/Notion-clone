@@ -27,7 +27,7 @@
     .hover-controls{display:flex; align-items:center; gap:6px; opacity:0; pointer-events:none; transition:opacity .15s}
     .brand:hover .hover-controls{opacity:1; pointer-events:auto}
 
-    .icon-pill{display:inline-flex; align-items:center; justify-content:center; width:28px; height:24px; border-radius:6px; border:1px solid var(--border); background:#fff; cursor:pointer}
+    .icon-pill{display:inline-flex; align-items:center; justify-content:center; width:28px; height:24px; border-radius:6px; border:0px solid var(--border); cursor:pointer}
     .icon-pill:hover{background:var(--iconHover)}
 
     .search{display:flex;gap:8px;align-items:center;background:transparent;border:1px solid transparent;border-radius:10px;padding:8px 10px;transition:background .15s,border-color .15s}
@@ -40,18 +40,44 @@
     .side-item.active{background:var(--hover2); border:1px solid #bde3fb}
 
     /* Section headers */
-    .section-row{display:flex; align-items:center; gap:8px; padding:4px 6px; margin:6px 0 2px; border-radius:10px; color:#9aa1aa; cursor:pointer}
+    .section-row{display:flex; align-items:center; gap:4px; padding:4px 6px; margin:6px 0 2px; border-radius:10px; color:#9aa1aa; cursor:pointer}
     .section-row:hover{background:var(--hover)}
-    .section-title{font-size:12px; text-transform:uppercase; letter-spacing:.18em; flex:0 0 auto}
-    .chev{width:1em; text-align:right; opacity:.7; pointer-events:auto; transition:transform .15s; margin-left:6px; cursor:pointer}
+    .section-title{
+        font-size:12px; 
+        text-transform:uppercase; 
+        letter-spacing:.18em; 
+        flex:0 0 auto;
+         /* Keep title on left */
+        }
+    .chev{width:16px; 
+        height:16px;
+        text-align:center; 
+        opacity:0; 
+        pointer-events:auto; 
+        transition:transform .15s; 
+        cursor:pointer;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        flex-shrink: 0;}
     .chev.collapsed{transform:rotate(-90deg)}
+    .section-row:hover .chev{opacity: 0.7}
     .section-controls{display:flex; align-items:center; gap:6px; opacity:0; pointer-events:none; transition:opacity .12s; margin-left:auto}
     .section-row:hover .section-controls{opacity:1; pointer-events:auto}
 
     .ws-pages, .fav-list, .shared-list, .private-list, .apps-list, .settings-list{display:flex; flex-direction:column; gap:2px}
     
     /* Add spacing between major sections */
-    .section-row{margin-top:16px}
+    .section-row{
+        display:flex; 
+        align-items:center; 
+        gap:8px; 
+        padding:4px 6px; 
+        margin:6px 0 2px; 
+        border-radius:10px; 
+        color:#9aa1aa; 
+        cursor:pointer;
+        }
     .section-row:first-of-type{margin-top:6px}
     
     /* Add extra gap before Settings (after Notion apps) */
@@ -698,12 +724,12 @@
     .task-board-controls{
       display:flex;
       align-items:center;
-      gap:12px;
+      gap:1px;
     }
     .task-board-controls .control-btn{
       padding:8px 12px;
       border-radius:8px;
-      border:1px solid var(--border);
+      border:0px solid var(--border);
       background:#fff;
       cursor:pointer;
       display:inline-flex;
@@ -1098,8 +1124,8 @@
       display:inline-flex;
       align-items:center;
       gap:10px;
-      padding:14px 22px;
-      border-radius:14px;
+      padding:10px 20px;
+      border-radius:25px;
       border:none;
       background:#f7f6f3;
       cursor:pointer;
@@ -1115,7 +1141,7 @@
       font-size:20px;
     }
     .get-started-btn.more-btn{
-      padding:14px 20px;
+      padding:10px 20px;
     }
 
     /* View type selector overlay */
@@ -2133,77 +2159,86 @@
       font-weight:500;
     }
 
+    .icon{
+        width: 15px;
+        height: 15px;
+    }
+
   </style>
 </head>
 <body>
-  <button id="btnOpenSidebar" class="button hamburger">☰</button>
+  <button id="btnOpenSidebar" class="button hamburger"><img src="icons/right_dir.png" class="icon" /></button>
   <div class="app">
     <aside class="sidebar">
       <!-- sticky header -->
       <div class="side-head">
         <div class="brand" id="brandArea">
           <div class="dot"></div>
-          <div class="name">Guest's</div>
+          <div class="name">Soumikii'…</div>
           <div class="hover-controls">
-            <button class="icon-pill" id="btnCollapse" title="Close sidebar">«</button>
-            <button class="icon-pill" id="btnNewNote" title="New note">📝</button>
-            <button class="icon-pill" id="btnChevron" title="Account">⌄</button>
+            <button class="icon-pill" id="btnCollapse" title="Close sidebar"><img src="icons/back.png" class="icon" /></button>
+            <button class="icon-pill" id="btnNewNote" title="New note"><img src="icons/editing.png" class="icon" /></button>
+            <button class="icon-pill" id="btnChevron" title="Account"><img src="icons/down-arrow-black.png" class="icon"></button>
           </div>
         </div>
 
         <label class="search">
-          <span style="opacity:.5">🔍</span>
+          <span style="opacity:.5"><img src="icons/search.png" class="icon" /></span>
           <input id="sidebarSearch" placeholder="Search" />
         </label>
 
-        <div class="side-item active" data-static="home">🏠 <span class="txt">Home</span></div>
-        <div class="side-item" data-static="meetings">🗓️ <span class="txt">Meetings</span></div>
-        <div class="side-item" data-static="ai">✨ <span class="txt">Notion AI</span></div>
-        <div class="side-item" data-static="inbox">📥 <span class="txt">Inbox</span></div>
+        <div class="side-item active" data-static="home"><img src="icons/home.png" class="icon" /> <span class="txt" style="opacity:.5">Home</span></div>
+        <div class="side-item" data-static="meetings"><img src="icons/transcription.png" class="icon" /> <span class="txt" style="opacity:.5">Meetings</span></div>
+        <div class="side-item" data-static="ai"><img src="icons/face-id.png" class="icon" /> <span class="txt" style="opacity:.5">Notion AI</span></div>
+        <div class="side-item" data-static="inbox"><img src="icons/inbox.png" class="icon" /> <span class="txt" style="opacity:.5">Inbox</span></div>
       </div>
 
       <!-- scrollable middle -->
       <div class="side-scroll">
         <!-- Favorites -->
         <div class="section-row" id="secFavorites">
-          <span class="chev" id="chevFavorites">⌄</span>
+          
           <div class="section-title">Favorites</div>
+          <span class="chev" id="chevFavorites">⌄</span>
           <div class="section-controls">
-            <button class="icon-pill" title="More">⋯</button>
-            <button class="icon-pill" id="favAdd" title="Add a page">＋</button>
+            <button class="icon-pill" title="More"><img src="icons/dots.png" class="icon" /></button>
+            <button class="icon-pill" id="favAdd" title="Add a page"><span style="opacity:.5">＋</span></button>
           </div>
         </div>
         <div id="favorites" class="fav-list section-content"></div>
 
         <!-- Workspace -->
         <div class="section-row" id="secWorkspace">
-          <span class="chev" id="chevWorkspace">⌄</span>
+          
           <div class="section-title">Workspace</div>
+          <span class="chev" id="chevWorkspace">⌄</span>
           <div class="section-controls">
-            <button class="icon-pill" id="wsMore" title="More">⋯</button>
-            <button class="icon-pill" id="wsAdd" title="Add a page">＋</button>
+            <button class="icon-pill" id="wsMore" title="More"><img src="icons/dots.png" class="icon" /></button>
+            <button class="icon-pill" id="wsAdd" title="Add a page"><span style="opacity:.5">＋</span></button>
           </div>
         </div>
         <div id="tree" class="ws-pages section-content"></div>
 
         <!-- Shared -->
         <div class="section-row" id="secShared">
-          <span class="chev" id="chevShared">⌄</span>
+          
           <div class="section-title">Shared</div>
+          <span class="chev" id="chevShared">⌄</span>
           <div class="section-controls">
-            <button class="icon-pill" title="More">⋯</button>
-            <button class="icon-pill" id="sharedAdd" title="Add a page">＋</button>
+            <button class="icon-pill" title="More"><img src="icons/dots.png" class="icon" /></button>
+            <button class="icon-pill" id="sharedAdd" title="Add a page"><span style="opacity:.5">＋</span></button>
           </div>
         </div>
         <div id="sharedList" class="shared-list section-content"></div>
 
         <!-- Private -->
         <div class="section-row" id="secPrivate">
-          <span class="chev" id="chevPrivate">⌄</span>
+          
           <div class="section-title">Private</div>
+          <span class="chev" id="chevPrivate">⌄</span>
           <div class="section-controls">
-            <button class="icon-pill" title="More" id="privateMoreBtn">⋯</button>
-            <button class="icon-pill" id="privateAdd" title="Add a page">＋</button>
+            <button class="icon-pill" title="More" id="privateMoreBtn"><img src="icons/dots.png" class="icon" /></button>
+            <button class="icon-pill" id="privateAdd" title="Add a page"><span style="opacity:.5">＋</span></button>
           </div>
         </div>
         <div id="privateList" class="private-list section-content"></div>
@@ -2223,22 +2258,22 @@
           <div class="section-controls"></div>
         </div>
         <div class="apps-list" id="appsList">
-          <div class="node">✉️ Notion Mail</div>
-          <div class="node">📅 Notion Calendar</div>
-          <div class="node">🅽 Notion Desktop</div>
+          <div class="node"><img src="icons/paperPlane.png" class="icon" /> Notion Mail</div>
+          <div class="node"><img src="icons/calendar.png" class="icon" /> Notion Calendar</div>
+          <div class="node"><img src="icons/notion.png" class="icon" /> Notion Desktop</div>
         </div>
 
         <!-- Settings / Marketplace / Trash -->
         <div class="settings-list" id="settingsList">
-          <div class="node">⚙️ Settings</div>
-          <div class="node">🛍️ Marketplace</div>
-          <div class="node">🗑️ Trash</div>
+          <div class="node"><img src="icons/setting.png" class="icon" /> Settings</div>
+          <div class="node"><img src="icons/shapes.png" class="icon" /> Marketplace</div>
+          <div class="node"><img src="icons/bin.png" class="icon" /> Trash</div>
         </div>
       </div>
 
       <!-- sticky footer -->
       <div class="side-sep"></div>
-      <div class="help-row side-foot">❓ Help</div>
+      <div class="help-row side-foot"><img src="icons/question.png" class="icon" /> Help</div>
     </aside>
 
     <main class="main">
@@ -2296,7 +2331,7 @@
                 name:'Workspace 1',
                 pages:{},
                 rootOrder:[]
-            }}
+        }}
         };
         save(state); return state;
     }
@@ -2555,7 +2590,14 @@
       iconSpan.className = 'node-icon';
       // Show checkmark for Task List pages
       const isTaskList = (page.title||'').toLowerCase() === 'task list';
-      iconSpan.textContent = isTaskList ? '✓' : (page.icon || '📄');
+    //   iconSpan.textContent = isTaskList ? '✓' : (page.icon || '📄');
+      if(isTaskList){
+        iconSpan.textContent = '✓';
+    } else if(page.icon && page.icon.includes('<img')){
+        iconSpan.innerHTML = page.icon;
+    } else {
+        iconSpan.textContent = page.icon || '📄';
+    }
       
       const titleSpan = document.createElement('span');
       titleSpan.textContent = page.title || 'Untitled';
@@ -2799,7 +2841,7 @@
         }
         const more = document.createElement('div');
         more.className = 'node';
-        more.innerHTML = '⋯ More';
+        more.innerHTML = '<img src="icons/dots.png" class="icon" /> More';
         more.title = 'All private pages';
         more.onclick = () => openPrivateOverlay();
         privateList.appendChild(more);
@@ -2999,7 +3041,7 @@
           const templates = [
             {icon:'📘', name:'Getting Started'},
             {icon:'📝', name:'Quick Note'},
-            {icon:'✅', name:'Task List'},
+            {icon:'<img src="icons/check-mark.png" style="width:16px;height:16px;vertical-align:middle">', name:'Task List'},
             {icon:'📔', name:'Journal'},
             {icon:'📚', name:'Reading List'},
             {icon:'🏠', name:'Personal Home'}
@@ -3015,7 +3057,7 @@
             
             const icon = document.createElement('span');
             icon.className = 'page-icon';
-            icon.textContent = template.icon;
+            icon.innerHTML = template.icon;
             
             const titleContainer = document.createElement('div');
             titleContainer.className = 'page-title';
@@ -3204,7 +3246,7 @@
           }
           
           const crumbEl = document.createElement('span');
-          crumbEl.textContent = (crumb.icon ? crumb.icon + ' ' : '') + crumb.title;
+          crumbEl.innerHTML = (crumb.icon ? crumb.icon + ' ' : '') + crumb.title;
           crumbEl.style.cursor = 'pointer';
           crumbEl.style.padding = '2px 4px';
           crumbEl.style.borderRadius = '4px';
@@ -3226,11 +3268,10 @@
           // Add "Private" badge after the page name if it's a root private page
           if(isRootPrivatePage && index === breadcrumbs.length - 1){
             const lockIcon = document.createElement('span');
-            lockIcon.innerHTML = ' 🔒';
+            lockIcon.innerHTML = '<img src="icons/padlock.png" class="icon" style="width:15px;height:15px;margin-top:2px">';
             lockIcon.style.opacity = '0.5';
             lockIcon.style.marginLeft = '8px';
             crumbsEl.appendChild(lockIcon);
-            
             const privateText = document.createElement('span');
             privateText.textContent = ' Private';
             privateText.style.opacity = '0.7';
@@ -3239,6 +3280,10 @@
             const chevron = document.createElement('span');
             chevron.innerHTML = ' ⌄';
             chevron.style.opacity = '0.5';
+            chevron.style.display = 'inline-flex';
+            chevron.style.alignItems = 'center';
+            chevron.style.marginLeft = '2px';
+            chevron.style.marginBottom = '7px';
             crumbsEl.appendChild(chevron);
           }
         });
@@ -3260,7 +3305,7 @@
     function renderHome(){
       content.innerHTML='';
       const hero=document.createElement('div'); hero.className='home-hero'; hero.textContent='Good afternoon'; content.appendChild(hero);
-      const sec1=document.createElement('div'); sec1.className='home-section-title'; sec1.innerHTML='⏱️ Recently visited'; content.appendChild(sec1);
+      const sec1=document.createElement('div'); sec1.className='home-section-title'; sec1.innerHTML='<img src="icons/clock.png" class="icon" /> Recently visited'; content.appendChild(sec1);
       const row=document.createElement('div'); row.className='card-row'; content.appendChild(row);
       (state.visited.length? state.visited: ws().rootOrder).slice(0,5).forEach(id=>{
         const p=getPage(id)||{title:'New page'};
@@ -3269,7 +3314,7 @@
         card.onclick=()=>openEditor('workspace', id);
         row.appendChild(card)
       });
-      const sec2=document.createElement('div'); sec2.className='home-section-title'; sec2.innerHTML='📅 Upcoming events'; content.appendChild(sec2);
+      const sec2=document.createElement('div'); sec2.className='home-section-title'; sec2.innerHTML='<img src="icons/calendar.png" class="icon" /> Upcoming events'; content.appendChild(sec2);
       const up=document.createElement('div'); up.className='upcoming'; up.innerHTML=`<div class="grid"><div class="panel">Connect AI Meeting Notes with your Calendar events<br/><br/><a href="#" onclick="alert('Stub: connect calendar')">Connect Notion Calendar</a></div><div class="panel">Today · Team standup (9 AM · Office)<br/>Sat · Project check-in (10 AM · Office)</div></div>`;
       content.appendChild(up);
     }
@@ -5733,20 +5778,39 @@
         const wrap=document.createElement('div'); wrap.className='cover-wrap';
         const cv=document.createElement('div'); cv.className='cover'; cv.style.backgroundImage=`url(${page.cover})`;
         const chip=document.createElement('div'); chip.className='comment-chip'; chip.innerHTML='💬 Add comment';
-        chip.onclick=()=>alert('Add comment (stub)');
-        const emoji=document.createElement('div'); emoji.className='page-emoji'; emoji.textContent=page.icon||'😊';
-        emoji.onclick=()=>openIconTray(ico=>{ page.icon=ico; save(state); renderTree(); renderPrivate(); renderShared(); renderFavorites(); renderEditor(scope,id); });
-        wrap.appendChild(chip); wrap.appendChild(cv); wrap.appendChild(emoji);
+        chip.onclick=()=>alert('Add comment');
+        
+        // Icon button (only show if no icon exists)
+        wrap.appendChild(chip); // Add comment chip first
+        wrap.appendChild(cv); // Add cover
+
+        // Icon button (only show if no icon exists)
+        if(!page.icon){
+            const iconChip=document.createElement('div'); 
+            iconChip.className='comment-chip'; 
+            iconChip.style.left='260px'; // Position to the right of comment chip
+            iconChip.innerHTML='<img src="icons/happiness.png" class="icon" /> Add icon';
+            iconChip.onclick=()=>openIconTray(ico=>{ page.icon=ico; save(state); renderTree(); renderPrivate(); renderShared(); renderFavorites(); renderEditor(scope,id); });
+            wrap.appendChild(iconChip);
+        } else {
+            // Show the emoji if icon exists
+            const emoji=document.createElement('div'); 
+            emoji.className='page-emoji'; 
+            emoji.textContent=page.icon;
+            emoji.onclick=()=>openIconTray(ico=>{ page.icon=ico; save(state); renderTree(); renderPrivate(); renderShared(); renderFavorites(); renderEditor(scope,id); });
+            wrap.appendChild(emoji);
+        }
+
         content.appendChild(wrap);
-      }
+    }
 
       // Quick actions bar - AFTER cover, BEFORE title
       const bar = document.createElement('div');
       bar.className = 'quick-actions';
       bar.innerHTML = `
-        <div class="qa" id="qaIcon"><span class="ico">😊</span><span>Add icon</span></div>
-        <div class="qa" id="qaCover"><span class="ico">🖼️</span><span>Add cover</span></div>
-        <div class="qa" id="qaComment"><span class="ico">💬</span><span>Add comment</span></div>
+        <div class="qa" id="qaIcon"><span class="ico"><img src="icons/happiness.png" class="icon" /></span><span>Add icon</span></div>
+        <div class="qa" id="qaCover"><span class="ico"><img src="icons/image.png" class="icon" /></span><span>Add cover</span></div>
+        <div class="qa" id="qaComment"><span class="ico"><img src="icons/comment.png" class="icon" style="margin-top:2px"/></span><span>Add comment</span></div>
       `;
       content.appendChild(bar);
 
@@ -5773,20 +5837,21 @@
 
       // Hide/show buttons based on state
       const isTaskList = (page.title||'').toLowerCase()==='task list';
-      if(isTaskList){
+        if(isTaskList){
         // For task list: only show "Add cover" and hide icon/comment
         qaIcon.style.display='none';
-        qaComment.textContent='Hide description';
+        qaComment.innerHTML='<img src="icons/information.png" style="width:18px;height:18px;vertical-align:middle;margin-right:6px">Hide description';
+        // qaComment.textContent='Hide description';
         if(page.cover) qaCover.style.display='none';
-      } else {
+        } else {
         // For regular pages
-        if(page.icon || page.cover){ 
-          qaIcon.style.display='none'; 
+        if(page.icon){ 
+            qaIcon.style.display='none'; 
         }
         if(page.cover){ 
-          qaCover.style.display='none'; 
+            qaCover.style.display='none'; 
         }
-      }
+        }
 
       const titleInput=document.createElement('input');
       titleInput.className='input';
@@ -6041,7 +6106,7 @@
         // Board view button
         const boardViewBtn=document.createElement('div');
         boardViewBtn.className='board-view-btn';
-        boardViewBtn.innerHTML='<span style="font-size:18px">▦</span> Board View';
+        boardViewBtn.innerHTML='<span style="font-size:18px"><img src="icons/database.png" class="icon"></span> Board View';
         content.appendChild(boardViewBtn);
         
         // Board header with controls
@@ -6050,12 +6115,12 @@
         boardHeader.innerHTML=`
           <div></div>
           <div class="task-board-controls">
-            <button class="control-btn" data-label="Filter">≡</button>
-            <button class="control-btn" data-label="Sort">↕</button>
-            <button class="control-btn" data-label="Properties">⚡</button>
-            <button class="control-btn" data-label="Search">🔍</button>
-            <button class="control-btn" data-label="Settings">⚙</button>
-            <button class="control-btn new-btn">New ⌄</button>
+            <button class="control-btn" data-label="Filter"><img src="icons/filter.png" class="icon"></button>
+            <button class="control-btn" data-label="Sort"><img src="icons/sort.png" class="icon"></button>
+            <button class="control-btn" data-label="Properties"><img src="icons/flash.png" class="icon"></button>
+            <button class="control-btn" data-label="Search"><img src="icons/search.png" class="icon"></button>
+            <button class="control-btn" data-label="Settings"><img src="icons/setting.png" class="icon"></button>
+            <button class="control-btn new-btn">New <img src="icons/down-chevron.png" class="icon" style="margin-left: 3px"></button>
           </div>
         `;
         content.appendChild(boardHeader);
@@ -6325,15 +6390,15 @@
         topRow.style.cssText = 'display:flex;align-items:center;width:100%;margin-bottom:12px';
         topRow.innerHTML = `
           <button class="list-view-btn">
-            <span class="icon">☰</span>
+            <span class="icon"><img src="icons/list.png" class="icon"></span>
             <span>List view</span>
           </button>
           <div class="list-view-controls" style="margin-left:auto">
-            <button class="control-btn" data-label="Filter">≡</button>
-            <button class="control-btn ${hasActiveSort ? 'sort-active' : ''}" data-label="Sort" id="btnSort">↕</button>
-            <button class="control-btn" data-label="Search">🔍</button>
-            <button class="control-btn" data-label="Settings">⚙</button>
-            <button class="control-btn new-btn" id="dbNewEntry">New ⌄</button>
+            <button class="control-btn" data-label="Filter" style="border: 0px"><img src="icons/filter.png" class="icon"/></button>
+            <button class="control-btn ${hasActiveSort ? 'sort-active' : ''}" data-label="Sort" id="btnSort" style="border: 0px"><img src="icons/sort.png" class="icon"></button>
+            <button class="control-btn" data-label="Search" style="border: 0px"><img src="icons/search.png" class="icon"></button>
+            <button class="control-btn" data-label="Settings" style="border: 0px"><img src="icons/setting.png" class="icon"></button>
+            <button class="control-btn new-btn" id="dbNewEntry">New <img src="icons/down-chevron.png" class="icon" style="margin-left: 3px"></button>
           </div>
         `;
         header.appendChild(topRow);
@@ -6531,8 +6596,8 @@
       
       if(isEmpty && !isTaskList && !page.viewType){
         showGetStartedOptions(page, scope, id);
-      }
-    }
+      
+    }}
 
     // Show "Get started with" options for new pages
     // Show "Get started with" options for new pages
@@ -6552,19 +6617,19 @@
       buttons.className = 'get-started-buttons';
       buttons.innerHTML = `
         <button class="get-started-btn" id="btnDatabase">
-          <span class="icon">▦</span>
+          <span class="icon"><img src="icons/database.png" class="icon" style="margin-bottom:2.5px"/></span>
           <span>Database</span>
         </button>
         <button class="get-started-btn" id="btnForm">
-          <span class="icon">📋</span>
+          <span class="icon"><img src="icons/form.png" class="icon" style="margin-bottom:2.5px"/></span>
           <span>Form</span>
         </button>
         <button class="get-started-btn" id="btnTemplates">
-          <span class="icon">🎨</span>
+          <span class="icon"><img src="icons/templates.png" class="icon" style="margin-bottom:2.5px"/></span>
           <span>Templates</span>
         </button>
         <button class="get-started-btn more-btn" id="btnMoreViews">
-          <span class="icon">⋯</span>
+          <span class="icon"><img src="icons/dots.png" class="icon" style="margin-bottom:2.5px"/></span>
         </button>
       `;
       
