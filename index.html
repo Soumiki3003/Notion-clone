@@ -2443,7 +2443,7 @@
         
         const iconSpan = document.createElement('span');
         iconSpan.className = 'node-icon';
-        iconSpan.textContent = p.icon || '📄';
+        iconSpan.innerHTML = p.icon || '<img src="icons/doc.png" class="icon" style="width: 16px; height: 16px; vertical-align: middle">';
         
         const titleSpan = document.createElement('span');
         titleSpan.textContent = p.title || 'Untitled';
