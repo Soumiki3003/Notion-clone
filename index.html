@@ -43,10 +43,12 @@
     .section-row{display:flex; align-items:center; gap:4px; padding:4px 6px; margin:6px 0 2px; border-radius:10px; color:#9aa1aa; cursor:pointer}
     .section-row:hover{background:var(--hover)}
     .section-title{
-        font-size:12px; 
+        font-size:11px; 
         text-transform:uppercase; 
-        letter-spacing:.18em; 
+        letter-spacing:.16em; 
         flex:0 0 auto;
+        border-top: 20px;
+        font-weight:700;
          /* Keep title on left */
         }
     .chev{width:16px; 
@@ -81,7 +83,7 @@
     .section-row:first-of-type{margin-top:6px}
     
     /* Add extra gap before Settings (after Notion apps) */
-    .settings-list{margin-top:20px}
+    .settings-list{margin-top:30px}
     
     /* Collapsible sections */
     .section-content.collapsed{display:none}
@@ -2202,7 +2204,7 @@
           <span class="chev" id="chevFavorites">⌄</span>
           <div class="section-controls">
             <button class="icon-pill" title="More"><img src="icons/dots.png" class="icon" /></button>
-            <button class="icon-pill" id="favAdd" title="Add a page"><span style="opacity:.5">＋</span></button>
+            <!-- <button class="icon-pill" id="favAdd" title="Add a page"><span style="opacity:.5">＋</span></button> -->
           </div>
         </div>
         <div id="favorites" class="fav-list section-content"></div>
@@ -2501,8 +2503,8 @@
               else if(scope === 'private') renderPrivate();
               else if(scope === 'shared') renderShared();
             }},
-            {icon:'🔗', label:'Copy link', onClick:()=>{ navigator.clipboard?.writeText('#'+(p.title||p.id)); }},
-            {icon:'✏️', label:'Rename', onClick:()=>{
+            {icon:'<img src="icons/link.png" class="icon">', label:'Copy link', onClick:()=>{ navigator.clipboard?.writeText('#'+(p.title||p.id)); }},
+            {icon:'<img src="icons/editing.png" class="icon">', label:'Rename', onClick:()=>{
               const nv=prompt('Rename page',p.title||'Untitled'); if(!nv) return;
               p.title=nv; save(state);
               if(scope==='workspace'){ renderTree(); renderCrumbs(); renderFavorites(); }
@@ -2596,7 +2598,7 @@
     } else if(page.icon && page.icon.includes('<img')){
         iconSpan.innerHTML = page.icon;
     } else {
-        iconSpan.textContent = page.icon || '📄';
+        iconSpan.innerHTML = page.icon || '<img src="icons/doc.png" class="icon" style="width:16px;height:16px;vertical-align:middle">';
     }
       
       const titleSpan = document.createElement('span');
@@ -2721,15 +2723,15 @@
         const r=e.currentTarget.getBoundingClientRect();
         const isFav = !!page.favorite;
         const actions=[
-          {icon:'☆',label: (isFav?'Remove from Favorites':'Add to Favorites'), onClick:()=>{
+          {icon:'<span style="opacity:0.6">☆</span>',label: (isFav?'Remove from Favorites':'Add to Favorites'), onClick:()=>{
             page.favorite=!isFav; save(state); renderFavorites();
             // Re-render the appropriate scope
             if(scope === 'workspace') renderTree();
             else if(scope === 'private') renderPrivate();
             else if(scope === 'shared') renderShared();
           }},
-          {icon:'🔗',label:'Copy link', onClick:()=>{ navigator.clipboard?.writeText('#'+(page.title||page.id)); }},
-          {icon:'📄',label:'Duplicate', onClick:()=>{
+          {icon:'<img src="icons/link.png" class="icon">',label:'Copy link', onClick:()=>{ navigator.clipboard?.writeText('#'+(page.title||page.id)); }},
+          {icon:'<img src="icons/copy.png" class="icon">',label:'Duplicate', onClick:()=>{
             if(scope==='workspace'){
               const id=uid('pg');
               ws().pages[id]={...page,id,title:(page.title||'Untitled')+' (copy)',children:[]};
@@ -2746,14 +2748,14 @@
               save(state); renderShared();
             }
           }},
-          {icon:'✏️',label:'Rename', onClick:()=>{
+          {icon:'<img src="icons/editing-white.png" class="icon">',label:'Rename', onClick:()=>{
             const nv=prompt('Rename page',page.title||'Untitled'); if(!nv) return;
             page.title=nv; save(state);
             if(scope==='workspace'){ renderTree(); renderCrumbs(); }
             else if(scope==='private'){ renderPrivate(); renderCrumbs(); }
             else if(scope==='shared'){ renderShared(); renderCrumbs(); }
           }},
-          {icon:'🗑️',label:'Move to Trash', onClick:()=>{
+          {icon:'<img src="icons/bin.png" class="icon">',label:'Move to Trash', onClick:()=>{
             if(scope==='workspace'){
               if(page.parentId==null){
                 const idx=ws().rootOrder.indexOf(page.id); if(idx>-1) ws().rootOrder.splice(idx,1);
@@ -2802,7 +2804,7 @@
               save(state); renderShared(); renderFavorites(); render();
             }
           }},
-          {icon:'🡥',label:'Open in new tab', onClick:()=>window.open('#','_blank')}
+          {icon:'<img src="icons/up-right.png" class="icon">',label:'Open in new tab', onClick:()=>window.open('#','_blank')}
         ];
         openCtx(r.left, r.bottom+6, actions);
       };
@@ -2934,7 +2936,11 @@
             // Page icon
             const icon = document.createElement('span');
             icon.className = 'page-icon';
-            icon.textContent = page.icon || '📄';
+            if(page.icon && page.icon.includes('<img')){
+                icon.innerHTML = page.icon;
+            } else {
+                icon.textContent = page.icon || '📄';
+            }
             
             // Page title container
             const titleContainer = document.createElement('div');
@@ -3440,7 +3446,7 @@
       header.className='task-detail-header';
       header.innerHTML=`
         <div style="display:flex;align-items:center;gap:8px">
-          <button class="close-btn" id="closeTaskDetail">←</button>
+          <button class="close-btn" id="closeTaskDetail"><img src="icons/back.png" class="icon" style="width:13px; height: 13px; margin-top: 3.5px"></button>
           <button class="close-btn" id="maximizeTask">⇱</button>
         </div>
       `;
@@ -3483,7 +3489,7 @@
       dateCreated.className='task-property';
       dateCreated.innerHTML=`
         <div class="task-property-label">
-          <span>🕐</span> Date Created
+          <span><img src="icons/time.png" class="icon" style="width: 12px; height: 12px"></span> Created
         </div>
         <div class="task-property-value">
           ${new Date(task.createdAt||Date.now()).toLocaleString('en-US', {
@@ -3501,7 +3507,7 @@
       statusBadge.textContent=column.label;
       statusProp.innerHTML=`
         <div class="task-property-label">
-          <span>⊙</span> Status
+          <span><img src="icons/down.png" class="icon" style="width: 13px; height: 13px"></span> Status
         </div>
         <div class="task-property-value"></div>
       `;
@@ -3513,7 +3519,7 @@
       tagsProp.className='task-property';
       tagsProp.innerHTML=`
         <div class="task-property-label">
-          <span>≡</span> Tags
+          <span><img src="icons/list.png" class="icon" style="width: 12px; height: 12px; opacity: 0.6"></span> Tags
         </div>
         <div class="task-property-value" style="color:#9aa1aa">
           Empty
@@ -3537,7 +3543,7 @@
       // Add property button
       const addProp=document.createElement('div');
       addProp.className='add-property-btn';
-      addProp.innerHTML='<span>＋</span> Add a property';
+      addProp.innerHTML='<span><img src="icons/plus.png" class="icon" style="width: 12px; height: 12px"></span> Add a property';
       propsContainer.appendChild(addProp);
       
       body.appendChild(propsContainer);
@@ -3548,7 +3554,7 @@
       comments.style.marginBottom='16px';
       comments.innerHTML=`
         <h4 style="margin-bottom:12px;font-size:14px;font-weight:600">Comments</h4>
-        <div style="display:flex;align-items:center;gap:12px;color:#9aa1aa;font-size:14px;padding:12px;background:var(--panel-2);border-radius:8px;cursor:pointer">
+        <div style="display:flex;align-items:center;gap:12px;color:#9aa1aa;font-size:14px;padding:6px;background:var(--panel-2);border-radius:8px;cursor:pointer">
           <span style="font-size:20px">👤</span>
           <span>Add a comment...</span>
         </div>
@@ -3589,9 +3595,9 @@
         templates.style.cssText='display:flex;flex-direction:column;gap:6px';
         
         const options=[
-          {icon:'📄', label:'New Task'},
-          {icon:'📄', label:'Empty'},
-          {icon:'＋', label:'New template', color:'#9aa1aa'}
+          {icon:'<img src="icons/doc.png" class="icon" style="width: 15px; height: 15px">', label:'New Task'},
+          {icon:'<img src="icons/doc.png" class="icon" style="width: 15px; height: 15px">', label:'Empty'},
+          {icon:'<img src="icons/plus.png" class="icon" style="width: 13px; height: 13px">', label:'New template', color:'#9aa1aa'}
         ];
         
         options.forEach(opt=>{
@@ -3734,7 +3740,7 @@
       header.className = 'db-entry-header';
       header.innerHTML = `
         <div style="display:flex;align-items:center;gap:8px">
-          <button class="close-btn" id="closeDbEntry">←</button>
+          <button class="close-btn" id="closeDbEntry"><img src="icons/back.png" class="icon" style="width:13px; height: 13px; margin-top: 3.5px"></button>
           <button class="close-btn" id="maximizeDbEntry">⇱</button>
         </div>
       `;
@@ -3764,7 +3770,7 @@
       createdProp.className = 'db-property';
       createdProp.innerHTML = `
         <div class="db-property-label">
-          <span>🕐</span> Created
+          <span><img src="icons/time.png" class="icon" style="width:13px; height: 13px; margin-top: 3.5px"></span> Created
         </div>
         <div class="db-property-value">
           ${new Date(entry.created || Date.now()).toLocaleString('en-US', {
@@ -3781,7 +3787,7 @@
       
       const tagLabel = document.createElement('div');
       tagLabel.className = 'db-property-label';
-      tagLabel.innerHTML = '<span>≡</span> Tags';
+      tagLabel.innerHTML = '<span><img src="icons/list.png" class="icon" style="width:13px; height: 13px; margin-top: 3.5px"></span> Tags';
       
       const tagValueContainer = document.createElement('div');
       tagValueContainer.style.cssText = 'flex:1;position:relative';
@@ -4277,7 +4283,7 @@
       comments.className = 'db-comments-section';
       comments.innerHTML = `
         <h4>Comments</h4>
-        <div style="display:flex;align-items:center;gap:12px;color:#9aa1aa;font-size:14px;padding:12px;background:var(--panel-2);border-radius:8px;cursor:pointer">
+        <div style="display:flex;align-items:center;gap:12px;color:#9aa1aa;font-size:14px;padding:6px;background:var(--panel-2);border-radius:8px;cursor:pointer">
           <span style="font-size:20px">👤</span>
           <span>Add a comment...</span>
         </div>
@@ -5912,7 +5918,7 @@
           // Page text with icon
           const textSpan = document.createElement('span');
           textSpan.className = 'page-link-text';
-          textSpan.innerHTML = `<span class="doc-icon">${child.icon || '📄'}</span>${child.title || 'Untitled'}`;
+          textSpan.innerHTML = `<span class="doc-icon">${child.icon || '<img src="icons/doc.png" class = "icon" style="width:16px;height:16px;vertical-align:middle">'}</span>${child.title || 'Untitled'}`;
           
           link.appendChild(plusIcon);
           link.appendChild(dragIcon);
@@ -6011,7 +6017,7 @@
           
           const textSpan = document.createElement('span');
           textSpan.className = 'page-link-text';
-          textSpan.innerHTML = `<span class="doc-icon">${childObj.icon || '📄'}</span>${childObj.title || 'Untitled'}`;
+          textSpan.innerHTML = `<span class="doc-icon">${childObj.icon || '<img src="icons/doc.png" class= "icon" style="width:16px;height:16px;vertical-align:middle">'}</span>${childObj.title || 'Untitled'}`;
           
           link.appendChild(plusIcon);
           link.appendChild(dragIcon);
@@ -6106,7 +6112,7 @@
         // Board view button
         const boardViewBtn=document.createElement('div');
         boardViewBtn.className='board-view-btn';
-        boardViewBtn.innerHTML='<span style="font-size:18px"><img src="icons/database.png" class="icon"></span> Board View';
+        boardViewBtn.innerHTML='<span style="font-size:18px"><img src="icons/board.png" class="icon"></span> Board View';
         content.appendChild(boardViewBtn);
         
         // Board header with controls
@@ -6270,7 +6276,7 @@
             };
 
             const editBtn=document.createElement('button');
-            editBtn.innerHTML='✏️';
+            editBtn.innerHTML='<img src="icons/editing.png" class="icon" style="opacity: 0.6"/>';
             editBtn.title='Edit';
             editBtn.onclick=(e)=>{
               e.stopPropagation();
@@ -6278,7 +6284,7 @@
             };
             
             const moreBtn=document.createElement('button');
-            moreBtn.innerHTML='⋯';
+            moreBtn.innerHTML='<img src="icons/dots.png" class="icon"/>';
             moreBtn.title='More';
             moreBtn.onclick=(e)=>{
               e.stopPropagation();
@@ -6415,7 +6421,7 @@
         // Filter chip (always visible)
         const filterChip = document.createElement('button');
         filterChip.className = 'filter-chip';
-        filterChip.innerHTML = '<span class="icon">＋</span><span>Filter</span>';
+        filterChip.innerHTML = '<span class="icon"><img src="icons/plus.png" class="icon" style="width: 12px; height: 12px; margin-bottom: 2px"></span><span>Filter</span>';
         filterChip.onclick = (e) => {
           e.stopPropagation();
           openFilterDropdown(filterChip, page, scope, id);
@@ -6470,7 +6476,16 @@
           
           const icon = document.createElement('span');
           icon.className = 'icon';
-          icon.textContent = entry.icon || '📄';
+          icon.style.display = 'inline-flex';
+          icon.style.alignItems = 'center';
+          icon.style.justifyContent = 'center';
+          if(entry.icon && entry.icon.includes('<img')){
+            icon.innerHTML = entry.icon;
+          } else if(entry.icon){
+          icon.textContent = entry.icon;
+          } else {
+            icon.innerHTML = '<img src="icons/doc.png" class= "icons" style="width:16px;height:16px">';
+          }
           
           const titleDiv = document.createElement('div');
           titleDiv.className = 'title';
@@ -6536,7 +6551,7 @@
           const newEntry = {
             id: uid('entry'),
             name: '',
-            icon: '📄',
+            icon: '<img src="icons/doc.png" class="icon" style="width:16px;height:16px;vertical-align:middle">',
             created: new Date().toISOString(),
             properties: {},
             body: ''
@@ -6558,7 +6573,7 @@
           const newEntry = {
             id: uid('entry'),
             name: '',
-            icon: '📄',
+            icon: '<img src="icons/doc.png" class= "icon" style="width:16px;height:16px;vertical-align:middle">',
             created: new Date().toISOString(),
             properties: {}
           };
@@ -6688,12 +6703,12 @@
       overlay.className = 'view-type-overlay';
       
       const viewTypes = [
-        {icon:'▦', label:'Table', type:'table'},
-        {icon:'▦', label:'Board', type:'board'},
-        {icon:'☰', label:'List', type:'list'},
-        {icon:'📄', label:'Timeline', type:'timeline'},
-        {icon:'📅', label:'Calendar', type:'calendar'},
-        {icon:'▦', label:'Gallery', type:'gallery'}
+        {icon:'<img src="icons/database.png" class="icon" style="width: 16px; height:16px; margin-bottom:4px; opacity:0.6">', label:'Table', type:'table'},
+        {icon:'<img src="icons/board.png" class="icon" style="width: 16px; height:16px; margin-bottom:4px">', label:'Board', type:'board'},
+        {icon:'<img src="icons/list.png" class="icon" style="width: 16px; height:16px; margin-bottom:4px; opacity:0.6"">', label:'List', type:'list'},
+        {icon:'<img src="icons/timeline.png" class="icon" style="width: 16px; height:16px; margin-bottom:4px">', label:'Timeline', type:'timeline'},
+        {icon:'<img src="icons/calendar-sec.png" class="icon" style="width: 16px; height:16px; margin-bottom:4px">', label:'Calendar', type:'calendar'},
+        {icon:'<img src="icons/gallery.png" class="icon" style="width: 16px; height:16px; margin-bottom:4px">', label:'Gallery', type:'gallery'}
       ];
       
       viewTypes.forEach(view => {
@@ -6733,7 +6748,7 @@
       const importOption = document.createElement('div');
       importOption.className = 'view-option';
       importOption.innerHTML = `
-        <span class="icon">↓</span>
+        <span class="icon"><img src="icons/import.png" class="icon" style="width: 16px; height:16px; margin-bottom:4px"></span>
         <span class="label">Import</span>
       `;
       importOption.onclick = () => {
